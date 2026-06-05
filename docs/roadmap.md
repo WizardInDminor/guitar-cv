@@ -1,0 +1,131 @@
+# Project Roadmap & Onboarding
+
+An engineering overview of the project as currently defined, the current implementation
+status, and the phased plan to reach a working prototype. For source-of-truth detail see
+the [Charter](system/charter.md), [Requirements](system/requirements.md), and the
+[Architecture](firmware/architecture.md) pages.
+
+---
+
+## 1. Project understanding
+
+**guitar-cv** is a bare-metal embedded instrument that turns a **monophonic guitar signal
+into real-time Eurorack CV + gate**, with an onboard **step sequencer** (record/playback,
+quantized & unquantized) and a small **OLED + encoder/button UI**. Academic capstone;
+the engineering ethos is explicit: **register-level bare-metal C, no HAL/CubeMX**,
+"understanding over speed."
+
+```mermaid
+flowchart LR
+    G[Guitar] --> AFE["Analog Front-End<br/>TL072/74 gain+bias+protect<br/>TLE2426 virtual gnd"]
+    AFE --> ADC["STM32 ADC<br/>continuous sampling"]
+    ADC --> PD["YIN pitch detect<br/>+ envelope / onset"]
+    PD --> QZ["Quantize (optional)"]
+    QZ --> CV["1V/oct mapping<br/>note_to_dac()"]
+    CV --> DAC["MCP4922 DAC<br/>SPI2, 12-bit"]
+    DAC --> OSC[Eurorack VCO]
+    PD --> GATE[Gate out] --> ENV[Eurorack EG]
+    ENC["Encoder + buttons"] --> UI
+    UI["UI / state machine"] --> OLED["SSD1306 OLED"]
+    UI --> SEQ["Sequence engine<br/>record / playback"]
+    SEQ --> CV
+```
+
+**Locked-in decisions:**
+
+- **MCU:** STM32F407VGT6 (DISC1 dev board) → **STM32F405RG** for the final PCB.
+- **DAC:** MCP4922, 3.3 V ref, 1× gain, LDAC tied low. See [MCP4922 Wiring](hardware/wiring-mcp4922.md).
+- **SPI:** SPI2 — PB13 SCK / PB15 MOSI (AF5), PB12 software-GPIO CS, 16-bit, CPOL=0/CPHA=0,
+  ÷8 (~2 MHz) bring-up. See [ADR-001](decisions/adr-001-spi-peripheral.md),
+  [ADR-002](decisions/adr-002-cs-management.md), [ADR-003](decisions/adr-003-spi-clock-rate.md).
+- **CV:** 1V/oct, C4 = 0 V, ≈103.6 DAC counts/semitone @ 3.3 Vref. See [CV Math](concepts/cv-math.md).
+- **Display:** SSD1306 128×64 over I2C. **Analog:** TL072/74 + TLE2426 ±12 V rail splitter.
+
+**MVP (FR-01…FR-11):** guitar input, monophonic pitch (stretch: low-B 30.87 Hz), onset/gate,
+1V/oct CV out, gate out, quantized + unquantized sequence record/store, tap/definable
+tempo, encoder+button UI, OLED feedback. **Out of scope:** polyphony, DAW-style editing,
+fancy GUI, enclosure, manufacturing. **Stretch:** MIDI out, looper, chaining, ext-clock
+sync, training mode. **Success = a live demo** with a real guitar driving real modular gear.
+
+Intended firmware layering:
+
+```mermaid
+flowchart TB
+    A["UI / State Machine — menus, modes, display"]
+    B["Control Logic — sequencer, quantize, tempo"]
+    C["Signal Processing — YIN pitch, envelope/onset"]
+    D["Hardware Drivers — SPI, I2C, ADC, GPIO, timers"]
+    E["Startup / Platform — vectors, clocks, linker"]
+    A --> B --> C --> D --> E
+```
+
+---
+
+## 2. Current implementation status
+
+Stage: **hardware bring-up / early Phase 1.** Build infra and docs are solid; almost no
+application firmware exists yet — the docs are ~2 phases ahead of the code.
+
+| Area | Status |
+|---|---|
+| Toolchain / Makefile (arm-none-eabi-gcc, OpenOCD flash) | ✅ Done |
+| Linker (`ld/stm32f407.ld`) + startup (`startup_stm32f407.s`, FPU, .data/.bss init) | ✅ Done |
+| `src/main.c` | ⚠️ Blink demo only (~26 lines, GPIOD LED toggle) |
+| SPI2 / MCP4922 driver | 🔄 Fully designed (ADRs + register map), not yet coded/bench-verified |
+| CV math (`note_to_dac()`) | 🔄 Derived, no code |
+| I2C/SSD1306, timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
+| Analog front-end (HW), Eurorack power (HW) | ❌ Not started |
+| Tests / CI | ❌ None |
+
+Highest-value next move: **prove the SPI → MCP4922 chain on the bench**, turning the
+documented design into verified working firmware. Everything downstream feeds the DAC.
+
+---
+
+## 3. Phases to complete the prototype (HW + SW)
+
+```mermaid
+flowchart TB
+    subgraph P1["Phase 1 — Core bring-up & I/O"]
+        P1a["SW: SPI2 driver, clock/PLL 168MHz, SysTick, I2C+SSD1306, encoder/buttons"]
+        P1b["HW: MCP4922+OLED on breadboard; scope-verify SPI; DAC 1241≈1.000V"]
+    end
+    subgraph P2["Phase 2 — Audio & pitch (HIGHEST RISK)"]
+        P2a["HW: TL072/74 front-end, DC bias, anti-alias, TLE2426 vgnd"]
+        P2b["SW: ADC timer-trigger + DMA ring buf; YIN; envelope/onset"]
+    end
+    subgraph P3["Phase 3 — Musical control path"]
+        P3a["SW: note_to_dac + calibration; gate gen; quantize; sequence rep; tempo/tap"]
+    end
+    subgraph P4["Phase 4 — Product integration"]
+        P4a["SW: UI state machine, save/load, perf tuning"]
+        P4b["HW: migrate to STM32F405RG; Eurorack power ±12/+5; PCB; panel jacks"]
+    end
+    subgraph P5["Phase 5 — Stretch (post-MVP)"]
+        P5a["MIDI out, looper, chaining, ext clock, training mode"]
+    end
+    P1 --> P2 --> P3 --> P4 --> P5
+```
+
+- **Phase 1 — Core bring-up.** SPI2 driver + `spi2_write16()`, clock/PLL, SysTick, I2C+SSD1306,
+  inputs. Breadboard MCP4922+OLED, scope-verify SPI, DAC sanity (count 1241 ≈ 1.000 V).
+  *Exit: deterministic CV on the DAC, text on OLED.*
+- **Phase 2 — Audio & detection (riskiest).** Op-amp front-end (gain, mid-rail bias,
+  protection, anti-alias) + TLE2426 vgnd; ADC via timer trigger + DMA ring buffer; YIN;
+  envelope/onset. *Key tension: latency vs. accuracy at low B (30.87 Hz needs a long
+  window). Exit: stable live note/Hz readout at playable latency.*
+- **Phase 3 — Control path.** CV mapping + calibration, gate from onset/offset, quantization,
+  sequence storage (quantized + unquantized), tempo/tap. *Exit: guitar → correct CV/gate
+  driving a real oscillator/envelope.*
+- **Phase 4 — Product integration.** UI state machine, save/load, tuning; migrate F407→F405,
+  Eurorack power, PCB, panel. *Exit: standalone, demo-ready.*
+- **Phase 5 — Stretch:** MIDI, looper, chaining, ext clock, training mode.
+
+**Cross-cutting recommendations**
+
+1. **Host-side unit tests** for pure DSP/math (YIN, `note_to_dac`, quantization) — testable
+   off-target, de-risks Phase 2/3 cheaply.
+2. **Minimal CI** that compiles the firmware on push — there is currently none.
+3. **Plan the F407→F405 pin migration early** so analog/PCB work isn't redone.
+4. **Keep ADR discipline** for open decisions: ADC sampling strategy, pitch-window length,
+   power topology.
