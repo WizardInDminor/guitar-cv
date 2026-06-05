@@ -3,7 +3,7 @@
 **Date:** 2026-04-10  
 **Status:** Conceptual complete — bench work pending  
 **Phase:** 1 — Platform Bring-Up  
-**Previous session:** [Session 01](session-01.md) — Bare-metal blink, toolchain, GDB  
+**Previous session:** Session 01 — Bare-metal blink, toolchain, GDB *(notes not yet written)*  
 **Next session:** Session 03 — I2C Bring-Up (SSD1306 OLED)
 
 ---
