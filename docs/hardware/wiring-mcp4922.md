@@ -7,6 +7,7 @@ below is taken directly from the manufacturer datasheets listed under
 
 See also: [DAC Output — CV Generation](../firmware/dac-output.md),
 [SPI Driver](../firmware/spi-driver.md), [CV Math — 1V/oct](../concepts/cv-math.md),
+[Saleae Logic 2 — SPI Decode Setup](./saleae-logic2-spi-setup.md),
 [ADR-001 — SPI Peripheral Selection](../decisions/adr-001-spi-peripheral.md).
 
 ---
