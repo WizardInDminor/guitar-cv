@@ -1,7 +1,7 @@
 # Session 02 — SPI Bring-Up (MCP4922 DAC)
 
 **Date:** 2026-04-10  
-**Status:** Conceptual complete — bench work pending  
+**Status:** Driver code written (`src/spi2.c`, `src/dac.c`, bench demo in `src/main.c`) — scope/bench verification pending  
 **Phase:** 1 — Platform Bring-Up  
 **Previous session:** Session 01 — Bare-metal blink, toolchain, GDB *(notes not yet written)*  
 **Next session:** Session 03 — I2C Bring-Up (SSD1306 OLED)
