@@ -1,0 +1,24 @@
+site_name: Guitar-to-CV Sequencer
+site_description: Bare-metal STM32 capstone — real-time guitar pitch to Eurorack CV/gate
+site_author: Matt
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep purple
+    accent: cyan
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
