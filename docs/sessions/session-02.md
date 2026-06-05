@@ -1,7 +1,7 @@
 # Session 02 — SPI Bring-Up (MCP4922 DAC)
 
-**Date:** 2026-04-10  
-**Status:** Driver code written (`src/spi2.c`, `src/dac.c`, bench demo in `src/main.c`) — scope/bench verification pending  
+**Date:** 2026-04-10 (bench verification 2026-06-05)  
+**Status:** ✅ Complete — driver code written (`src/spi2.c`, `src/dac.c`, bench demo in `src/main.c`) and **hardware-verified on 2026-06-05** via Saleae Logic 2 MSO (SPI decode + analog scope)  
 **Phase:** 1 — Platform Bring-Up  
 **Previous session:** Session 01 — Bare-metal blink, toolchain, GDB *(notes not yet written)*  
 **Next session:** Session 03 — I2C Bring-Up (SSD1306 OLED)
@@ -112,6 +112,35 @@ Confirming pin availability required tracing the DISC1 MB997E schematic:
 
 ---
 
+## Bench Verification Results (2026-06-05)
+
+Initial SPI bring-up and MCP4922 DAC conversion **verified in hardware** using a Saleae
+Logic 2 (MSO — mixed-signal: SPI protocol decode on the digital channels plus the analog
+scope on the DAC output). Analyzer configured per
+[Saleae Logic 2 — SPI Decode Setup](../hardware/saleae-logic2-spi-setup.md)
+(Mode 0, MSB-first, 16-bit, active-low CS).
+
+The captured SPI words decoded exactly as designed, and the measured analog output on VOUTA
+matched the expected 1V/oct levels:
+
+| Sent | Decoded word | DAC count | Channel | Measured VOUTA | Expected |
+|---|---|---|---|---|---|
+| C4 / zero | `0x3000` | 0 | A | **0 V** | 0.000 V |
+| C5 | `0x34D9` | 1241 | A | **1 V** | 1.000 V (one octave up) |
+| C6 | `0x39B2` | 2482 | A | **2 V** | 2.000 V (two octaves up) |
+
+Each word carries the expected control nibble `0b0011` (Channel A, unbuffered, 1× gain,
+active). Digital checks from the capture all passed: SCK idles low (CPOL=0), 16 clock
+pulses per frame, CS asserts low before SCK and returns high after the 16th pulse, and the
+analog output latches to the new level on the CS rising edge (LDAC tied to GND).
+
+!!! success "SPI → MCP4922 chain validated"
+    This closes out the highest-value Phase 1 milestone — the documented SPI/DAC design is
+    now proven working firmware on real hardware. Exact voltages are clean enough that
+    formal calibration can be deferred to a later session as planned.
+
+---
+
 ## Concepts Covered
 
 - [STM32 Alternate Function System](../concepts/stm32-alternate-functions.md)
@@ -122,10 +151,13 @@ Confirming pin availability required tracing the DISC1 MB997E schematic:
 
 ## Session Outcome
 
-Conceptual phase complete. All firmware decisions made and documented. Bench verification pending.
+Conceptual phase complete, all firmware decisions made and documented, and the SPI →
+MCP4922 chain **verified in hardware** on 2026-06-05 (see Bench Verification Results above).
+DAC output measured at 0 V / 1 V / 2 V for counts 0 / 1241 / 2482. Phase 1 SPI/DAC
+milestone done.
 
 ---
 
 ## Git Commit
 
-Pending bench verification completion.
+SPI bring-up + DAC conversion hardware-verified via Saleae Logic 2 MSO (2026-06-05).
