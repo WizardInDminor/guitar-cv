@@ -52,7 +52,7 @@ One semitone in counts:
 ```
 counts per semitone = (1/12 V) / (3.3V / 4096)
                     = 4096 / (12 × 3.3)
-                    ≈ 103.6 counts
+                    ≈ 103.4 counts
 ```
 
 This gives approximately 103 distinct DAC steps per semitone — far more than needed for accurate pitch output.
@@ -65,25 +65,28 @@ To convert a MIDI note number to a DAC count:
 
 ```
 count = (note - ref_note) × (4096 / (12 × Vref))
-      = (note - 60) × 103.66
+      = (note - 60) × 103.43
 ```
 
-In C:
+In C (the canonical, unit-tested implementation lives in `src/cv.c` /
+`include/cv.h`, with tests in `test/test_cv.c`). The cast rounds to nearest so
+the maximum error is 0.5 LSB rather than a full count:
 
 ```c
-#define VREF               3.3f
-#define DAC_COUNTS         4096.0f
-#define SEMITONES_PER_VOLT 12.0f
-#define REF_NOTE           60      // C4
+#define CV_VREF       3.3f
+#define CV_DAC_COUNTS 4096.0f
+#define CV_SEMIS_OCT  12.0f
+#define CV_REF_NOTE   60      // C4 = 0V
+#define CV_DAC_MAX    4095u
 
 uint16_t note_to_dac(uint8_t midi_note) {
-    float semitones = (float)(midi_note - REF_NOTE);
-    float voltage   = semitones / SEMITONES_PER_VOLT;
-    float count     = (voltage / VREF) * DAC_COUNTS;
+    float semitones = (float)((int)midi_note - CV_REF_NOTE);
+    float voltage   = semitones / CV_SEMIS_OCT;
+    float count     = (voltage / CV_VREF) * CV_DAC_COUNTS;
 
-    if (count < 0.0f)    count = 0.0f;
-    if (count > 4095.0f) count = 4095.0f;
-
+    if (count < 0.0f) return 0;
+    count += 0.5f;                       // round to nearest
+    if (count > (float)CV_DAC_MAX) return CV_DAC_MAX;
     return (uint16_t)count;
 }
 ```
@@ -95,13 +98,13 @@ uint16_t note_to_dac(uint8_t midi_note) {
 | Note | MIDI | Semitones | Voltage | DAC Count |
 |---|---|---|---|---|
 | C4 (ref) | 60 | 0 | 0.000V | 0 |
-| C#4 / Db4 | 61 | 1 | 0.083V | 104 |
+| C#4 / Db4 | 61 | 1 | 0.083V | 103 |
 | D4 | 62 | 2 | 0.167V | 207 |
 | E4 | 64 | 4 | 0.333V | 414 |
 | A4 | 69 | 9 | 0.750V | 931 |
 | C5 | 72 | 12 | 1.000V | 1241 |
 | A4+octave | 81 | 21 | 1.750V | 2172 |
-| C6 | 84 | 24 | 2.000V | 2483 |
+| C6 | 84 | 24 | 2.000V | 2482 |
 
 ---
 

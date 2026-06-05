@@ -38,20 +38,18 @@ configuration for single-channel real-time CV output.
 
 ## Note to DAC Conversion
 
+Implemented and unit-tested in `src/cv.c` / `include/cv.h`
+(tests: `test/test_cv.c`, run with `make test`). Rounds to nearest (max 0.5 LSB error):
+
 ```c
-#define VREF               3.3f
-#define DAC_COUNTS         4096.0f
-#define SEMITONES_PER_VOLT 12.0f
-#define REF_NOTE           60      // C4 = 0V reference
-
 uint16_t note_to_dac(uint8_t midi_note) {
-    float semitones = (float)(midi_note - REF_NOTE);
-    float voltage   = semitones / SEMITONES_PER_VOLT;
-    float count     = (voltage / VREF) * DAC_COUNTS;
+    float semitones = (float)((int)midi_note - CV_REF_NOTE);  // C4 = 60 = 0V
+    float voltage   = semitones / CV_SEMIS_OCT;
+    float count     = (voltage / CV_VREF) * CV_DAC_COUNTS;     // CV_VREF = 3.3f
 
-    if (count < 0.0f)    count = 0.0f;
-    if (count > 4095.0f) count = 4095.0f;
-
+    if (count < 0.0f) return 0;
+    count += 0.5f;                                             // round to nearest
+    if (count > (float)CV_DAC_MAX) return CV_DAC_MAX;
     return (uint16_t)count;
 }
 ```
@@ -60,15 +58,21 @@ uint16_t note_to_dac(uint8_t midi_note) {
 
 ## MCP4922 Write
 
+The command-word packing is the pure, unit-tested `mcp4922_command()`
+(`src/mcp4922.c`); the SPI transmit is added in the bench bring-up session:
+
 ```c
-void mcp4922_write(uint8_t channel, uint16_t value) {
+uint16_t mcp4922_command(uint8_t channel, uint16_t value) {
     uint16_t cmd = 0;
     cmd |= (channel & 0x1) << 15;  // channel select
     cmd |= (1 << 13);               // gain 1x
     cmd |= (1 << 12);               // active (not shutdown)
     cmd |= (value & 0x0FFF);        // 12-bit data
+    return cmd;
+}
 
-    spi2_write16(cmd);
+void mcp4922_write(uint8_t channel, uint16_t value) {
+    spi2_write16(mcp4922_command(channel, value));
 }
 ```
 
@@ -88,10 +92,10 @@ Expected output voltages with 3.3V reference:
 | Note | MIDI | Semitones from C4 | Target Voltage | DAC Count |
 |---|---|---|---|---|
 | C4 (ref) | 60 | 0 | 0.000V | 0 |
-| C#4 | 61 | 1 | 0.083V | 104 |
+| C#4 | 61 | 1 | 0.083V | 103 |
 | A4 | 69 | 9 | 0.750V | 931 |
 | C5 | 72 | 12 | 1.000V | 1241 |
-| C6 | 84 | 24 | 2.000V | 2483 |
+| C6 | 84 | 24 | 2.000V | 2482 |
 
 !!! tip "First Bench Test"
     Send DAC count 1241 and verify 1.000V on the oscilloscope. One volt represents exactly one octave above reference — the cleanest possible first measurement.
