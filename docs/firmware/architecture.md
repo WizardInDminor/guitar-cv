@@ -67,7 +67,7 @@ The guiding principle is clean separation of concerns across layers — hardware
 |---|---|
 | Startup / vector table | ✅ Complete (Session 01) |
 | GPIO | ✅ Complete (Session 01) |
-| SPI driver (MCP4922) | ✅ Code written (`src/spi2.c`, `src/dac.c`) — bench/scope verification pending |
+| SPI driver (MCP4922) | ✅ Code written (`src/spi2.c`, `src/dac.c`) + hardware-verified 2026-06-05 (Saleae Logic 2 MSO, 0/1/2 V) |
 | CV output mapping (note→count) | ✅ Implemented + unit-tested (`src/cv.c`, `src/mcp4922.c`) |
 | I2C driver (SSD1306) | Not started |
 | Timer / SysTick | Not started |

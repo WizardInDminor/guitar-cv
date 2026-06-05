@@ -71,14 +71,16 @@ application firmware exists yet — the docs are ~2 phases ahead of the code.
 | Toolchain / Makefile (arm-none-eabi-gcc, OpenOCD flash) | ✅ Done |
 | Linker (`ld/stm32f407.ld`) + startup (`startup_stm32f407.s`, FPU, .data/.bss init) | ✅ Done |
 | `src/main.c` | ⚠️ Blink demo only (~26 lines, GPIOD LED toggle) |
-| SPI2 / MCP4922 driver | 🔄 Fully designed (ADRs + register map), not yet coded/bench-verified |
+| SPI2 / MCP4922 driver | ✅ Coded (`src/spi2.c`, `src/dac.c`) + **hardware-verified** 2026-06-05 via Saleae Logic 2 MSO (0/1/2 V) |
 | CV math (`note_to_dac()`) | 🔄 Derived, no code |
 | I2C/SSD1306, timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
 | Analog front-end (HW), Eurorack power (HW) | ❌ Not started |
 | Tests / CI | ❌ None |
 
-Highest-value next move: **prove the SPI → MCP4922 chain on the bench**, turning the
-documented design into verified working firmware. Everything downstream feeds the DAC.
+~~Highest-value next move: **prove the SPI → MCP4922 chain on the bench**~~ — ✅ **done
+2026-06-05**: SPI decode + DAC output verified on hardware (Saleae Logic 2 MSO), measuring
+0/1/2 V for counts 0/1241/2482. The documented design is now verified working firmware.
+Next move: I2C + SSD1306 bring-up (Session 03).
 
 ---
 

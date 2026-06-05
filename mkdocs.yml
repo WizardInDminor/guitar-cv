@@ -37,6 +37,7 @@ nav:
   - Hardware:
     - Analog Front End: hardware/analog-front-end.md
     - MCP4922 Wiring: hardware/wiring-mcp4922.md
+    - Saleae Logic 2 SPI Setup: hardware/saleae-logic2-spi-setup.md
     - Power Design: hardware/power.md
     - Bill of Materials: hardware/bom.md
   - Firmware:
