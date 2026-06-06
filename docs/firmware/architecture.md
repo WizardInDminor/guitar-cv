@@ -69,7 +69,8 @@ The guiding principle is clean separation of concerns across layers — hardware
 | GPIO | ✅ Complete (Session 01) |
 | SPI driver (MCP4922) | ✅ Code written (`src/spi2.c`, `src/dac.c`) + hardware-verified 2026-06-05 (Saleae Logic 2 MSO, 0/1/2 V) |
 | CV output mapping (note→count) | ✅ Implemented + unit-tested (`src/cv.c`, `src/mcp4922.c`) |
-| I2C driver (SSD1306) | Not started |
+| I2C driver | ✅ Code written (`src/i2c.c`) — bench verification pending |
+| OLED driver (SSD1306) | ✅ Code written (`src/ssd1306.c`, 5×7 text) — bench verification pending |
 | Timer / SysTick | Not started |
 | ADC | Not started |
 | Pitch detection | Not started |

@@ -73,7 +73,8 @@ application firmware exists yet — the docs are ~2 phases ahead of the code.
 | `src/main.c` | ⚠️ Blink demo only (~26 lines, GPIOD LED toggle) |
 | SPI2 / MCP4922 driver | ✅ Coded (`src/spi2.c`, `src/dac.c`) + **hardware-verified** 2026-06-05 via Saleae Logic 2 MSO (0/1/2 V) |
 | CV math (`note_to_dac()`) | 🔄 Derived, no code |
-| I2C/SSD1306, timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
+| I2C2 / SSD1306 OLED driver (5×7 text) | 🔄 Coded (`src/i2c.c`, `src/ssd1306.c`), bench verification pending |
+| Timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
 | Analog front-end (HW), Eurorack power (HW) | ❌ Not started |
 | Tests / CI | ❌ None |
 

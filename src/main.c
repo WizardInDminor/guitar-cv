@@ -3,6 +3,7 @@
 #include "cv.h"
 #include "dac.h"
 #include "mcp4922.h"
+#include "ssd1306.h"
 
 /* Onboard LED heartbeat (PD12, green LD4 on the DISC1). */
 #define RCC_AHB1ENR (*(volatile uint32_t *)0x40023830)
@@ -24,17 +25,30 @@ int main(void)
 
     dac_init();
 
+    /* I2C2 + SSD1306 bring-up: prove text on the OLED (Session 03). */
+    ssd1306_init();
+    ssd1306_text(0, 0, "GUITAR-CV");
+    ssd1306_text(2, 0, "SPI+I2C bring-up");
+
     /*
      * Bench bring-up: walk the documented first-test points through the full
      * path (note -> count -> command word -> SPI). VOUTA (pin 14) should read
      * ~0 V, ~1.000 V (C5), ~2.000 V (C6). The DAC is re-written each step so
-     * the SPI bursts are repeatable/triggerable on a scope.
+     * the SPI bursts are repeatable/triggerable on a scope. The current step is
+     * also echoed to the OLED so the I2C path is exercised every iteration.
      */
     static const uint8_t notes[] = { 60, 72, 84 };  /* C4, C5, C6 */
+    static const char *labels[] = {
+        "C4  0.000V",
+        "C5  1.000V",
+        "C6  2.000V",
+    };
 
     while (1) {
         for (unsigned i = 0; i < sizeof(notes) / sizeof(notes[0]); i++) {
             dac_write(MCP4922_CHANNEL_A, note_to_dac(notes[i]));
+            ssd1306_text(4, 0, "                ");  /* clear the line */
+            ssd1306_text(4, 0, labels[i]);
             GPIOD_ODR ^= (1u << LED_PIN);           /* heartbeat */
             delay(800000);
         }
