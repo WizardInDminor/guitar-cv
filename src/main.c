@@ -3,6 +3,8 @@
 #include "cv.h"
 #include "dac.h"
 #include "mcp4922.h"
+#include "i2c1.h"
+#include "ssd1306.h"
 
 /* Onboard LED heartbeat (PD12, green LD4 on the DISC1). */
 #define RCC_AHB1ENR (*(volatile uint32_t *)0x40023830)
@@ -23,6 +25,12 @@ int main(void)
     GPIOD_MODER |=  (0x1u << (LED_PIN * 2));  /* PD12 output         */
 
     dac_init();
+
+    /* OLED bring-up: white screen confirms I2C + SSD1306 init. */
+    i2c1_init();
+    delay(200000);   /* ~25 ms: let SSD1306 VCC stabilize before first command */
+    ssd1306_init();
+    ssd1306_fill(0xFF);
 
     /*
      * Bench bring-up: walk the documented first-test points through the full

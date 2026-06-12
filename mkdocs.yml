@@ -38,6 +38,7 @@ nav:
     - Analog Front End: hardware/analog-front-end.md
     - MCP4922 Wiring: hardware/wiring-mcp4922.md
     - Saleae Logic 2 SPI Setup: hardware/saleae-logic2-spi-setup.md
+    - SSD1306 Wiring: hardware/wiring-ssd1306.md
     - Power Design: hardware/power.md
     - Bill of Materials: hardware/bom.md
   - Firmware:
@@ -45,6 +46,7 @@ nav:
     - Code Analysis: firmware/code-analysis.md
     - SPI Driver: firmware/spi-driver.md
     - DAC Output: firmware/dac-output.md
+    - I2C Driver: firmware/i2c-driver.md
   - Concepts:
     - STM32 Alternate Functions: concepts/stm32-alternate-functions.md
     - SPI Peripheral Deep Dive: concepts/spi-peripheral.md
@@ -56,6 +58,7 @@ nav:
     - ADR-003 SPI Clock Rate: decisions/adr-003-spi-clock-rate.md
   - Sessions:
     - Session 02 — SPI Bring-Up: sessions/session-02.md
+    - Session 03 — I2C Bring-Up: sessions/session-03.md
   - Reference:
     - Register Map: reference/register-map.md
     - MCP4922 Command Word: reference/mcp4922-command-word.md

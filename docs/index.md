@@ -12,11 +12,12 @@ in C, no HAL — every peripheral configured and reasoned about explicitly.
 ## Hardware
 
 - **[MCP4922 Wiring (datasheet-verified)](hardware/wiring-mcp4922.md)** — DAC ↔ STM32 connections.
+- **[SSD1306 Wiring](hardware/wiring-ssd1306.md)** — OLED ↔ STM32 I2C connections.
 - [Analog Front End](hardware/analog-front-end.md) · [Power Design](hardware/power.md) · [Bill of Materials](hardware/bom.md)
 
 ## Firmware
 
-- [Architecture](firmware/architecture.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md)
+- [Architecture](firmware/architecture.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md) · [I2C Driver](firmware/i2c-driver.md)
 - Concepts: [STM32 Alternate Functions](concepts/stm32-alternate-functions.md) · [SPI Peripheral Deep Dive](concepts/spi-peripheral.md) · [CV Math — 1V/oct](concepts/cv-math.md)
 
 ## Reference & decisions
