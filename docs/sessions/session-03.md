@@ -1,7 +1,7 @@
 # Session 03 — I2C Bring-Up (SSD1306 OLED)
 
 **Date:** 2026-06-11  
-**Status:** Driver code written (`src/i2c1.c`, `src/ssd1306.c`) — bench verification pending  
+**Status:** ✅ Complete — driver written and hardware-verified 2026-06-12 (Saleae Logic 2, white screen confirmed)  
 **Phase:** 1 — Platform Bring-Up  
 **Previous session:** [Session 02 — SPI Bring-Up (MCP4922 DAC)](session-02.md)  
 **Next session:** Session 04 — SysTick / Timer
@@ -121,5 +121,6 @@ the wrong register will stall the bus.
 
 ## Session Outcome
 
-Code written and firmware builds cleanly. Bench verification pending — wire up the OLED
-module and confirm solid white screen on the next bench session.
+Complete. Saleae Logic 2 capture confirmed: I2C1 address `0x3D` ACK'd, full init sequence
+transmitted and ACK'd byte-for-byte, display shows solid white screen. 25 ms power-on delay
+was required — without it the SSD1306 silently failed to respond on cold start.
