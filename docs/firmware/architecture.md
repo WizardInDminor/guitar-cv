@@ -34,8 +34,16 @@ The guiding principle is clean separation of concerns across layers — hardware
 ```
 ~/dev/school/stm32/guitar-cv/
 ├── src/
-│   └── main.c              # Entry point
-├── include/                # Header files
+│   ├── main.c              # Entry point + bring-up demo
+│   ├── spi2.c              # SPI2 peripheral driver (MCP4922)
+│   ├── mcp4922.c           # MCP4922 command word packing
+│   ├── dac.c               # DAC write abstraction
+│   ├── cv.c                # note_to_dac() — 1V/oct conversion
+│   ├── i2c1.c              # I2C1 peripheral driver (SSD1306)
+│   └── ssd1306.c           # SSD1306 OLED device driver
+├── include/                # Matching headers for each src/ module
+├── test/
+│   └── test_cv.c           # Host-side unit tests (cv.c + mcp4922.c)
 ├── startup/
 │   └── startup_stm32f407.s # Reset handler, vector table
 ├── ld/

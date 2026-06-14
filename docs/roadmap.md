@@ -63,25 +63,25 @@ flowchart TB
 
 ## 2. Current implementation status
 
-Stage: **hardware bring-up / early Phase 1.** Build infra and docs are solid; almost no
-application firmware exists yet — the docs are ~2 phases ahead of the code.
+Stage: **mid Phase 1.** Both output-side hardware drivers are written and bench-verified.
+Platform bring-up is on track; the remaining Phase 1 items are SysTick, encoder/button
+inputs, and the clock/PLL step up to 168 MHz.
 
 | Area | Status |
 |---|---|
 | Toolchain / Makefile (arm-none-eabi-gcc, OpenOCD flash) | ✅ Done |
 | Linker (`ld/stm32f407.ld`) + startup (`startup_stm32f407.s`, FPU, .data/.bss init) | ✅ Done |
-| `src/main.c` | ⚠️ Blink demo only (~26 lines, GPIOD LED toggle) |
+| `src/main.c` | ✅ DAC + OLED bring-up demo (LED heartbeat, CV walk, white screen) |
 | SPI2 / MCP4922 driver | ✅ Coded (`src/spi2.c`, `src/dac.c`) + **hardware-verified** 2026-06-05 via Saleae Logic 2 MSO (0/1/2 V) |
-| CV math (`note_to_dac()`) | 🔄 Derived, no code |
+| CV math (`note_to_dac()`) | ✅ Implemented + unit-tested (`src/cv.c`) |
 | I2C/SSD1306 | ✅ Coded (`src/i2c1.c`, `src/ssd1306.c`) + **hardware-verified** 2026-06-12 (Saleae Logic 2, white screen) |
 | Timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
+| Encoder / button inputs | ❌ Not started |
 | Analog front-end (HW), Eurorack power (HW) | ❌ Not started |
-| Tests / CI | ❌ None |
+| Tests / CI | ⚠️ Host-side unit tests for `cv.c` + `mcp4922.c` only; no CI |
 
-~~Highest-value next move: **prove the SPI → MCP4922 chain on the bench**~~ — ✅ **done
-2026-06-05**: SPI decode + DAC output verified on hardware (Saleae Logic 2 MSO), measuring
-0/1/2 V for counts 0/1241/2482. The documented design is now verified working firmware.
-Next move: I2C + SSD1306 bring-up (Session 03).
+**Next move: SysTick** — a reliable millisecond timebase is needed before encoder debouncing,
+display refresh scheduling, and tempo logic can be built.
 
 ---
 
