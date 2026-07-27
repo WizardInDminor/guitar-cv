@@ -18,7 +18,7 @@ in C, no HAL — every peripheral configured and reasoned about explicitly.
 
 ## Firmware
 
-- [Architecture](firmware/architecture.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md) · [I2C Driver](firmware/i2c-driver.md) · [Timing (SysTick)](firmware/timing.md)
+- [Architecture](firmware/architecture.md) · [Clock (PLL 168 MHz)](firmware/clock.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md) · [I2C Driver](firmware/i2c-driver.md) · [Timing (SysTick)](firmware/timing.md)
 - Concepts: [STM32 Alternate Functions](concepts/stm32-alternate-functions.md) · [SPI Peripheral Deep Dive](concepts/spi-peripheral.md) · [CV Math — 1V/oct](concepts/cv-math.md)
 
 ## Reference & decisions

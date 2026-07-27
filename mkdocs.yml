@@ -43,6 +43,7 @@ nav:
     - Bill of Materials: hardware/bom.md
   - Firmware:
     - Architecture: firmware/architecture.md
+    - Clock (PLL 168 MHz): firmware/clock.md
     - Code Analysis: firmware/code-analysis.md
     - SPI Driver: firmware/spi-driver.md
     - DAC Output: firmware/dac-output.md

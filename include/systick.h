@@ -19,6 +19,16 @@
 /* Start the 1 ms tick. Safe to call again after a core-clock change. */
 void systick_init(uint32_t system_core_clock_hz);
 
+/*
+ * Pure reload math (host-testable): clocks-per-ms minus 1, because the
+ * counter counts reload..0 inclusive. Must fit the 24-bit SYST_RVR field
+ * (max 0x00FFFFFF): 16 MHz -> 15,999; 168 MHz -> 167,999 — both fit.
+ */
+static inline uint32_t systick_reload_1ms(uint32_t core_clock_hz)
+{
+    return core_clock_hz / 1000u - 1u;
+}
+
 /* Milliseconds since systick_init(). Monotonic, wraps at 2^32. */
 uint32_t millis(void);
 

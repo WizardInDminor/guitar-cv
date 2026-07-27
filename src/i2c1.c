@@ -40,8 +40,20 @@
 #define SCL_PIN  6   /* PB6 — I2C1_SCL (AF4) */
 #define SDA_PIN  7   /* PB7 — I2C1_SDA (AF4) */
 
-void i2c1_init(void)
+i2c_status_t i2c1_init(uint32_t pclk1_hz, uint32_t scl_hz)
 {
+    /* 0. Timing from the actual APB1 clock; validate the field limits. */
+    uint32_t freq  = i2c_freq_field(pclk1_hz);
+    uint32_t ccr   = i2c_sm_ccr(pclk1_hz, scl_hz);
+    uint32_t trise = i2c_sm_trise(pclk1_hz);
+
+    if (scl_hz == 0u || scl_hz > 100000u ||   /* standard mode only      */
+        freq < 2u || freq > 50u ||            /* CR2.FREQ field limits   */
+        ccr < 4u || ccr > 0xFFFu ||           /* SM minimum / 12-bit CCR */
+        trise > 63u) {                        /* 6-bit TRISE field       */
+        return I2C_ERR_INVALID_CONFIG;
+    }
+
     /* 1. Enable GPIOB and I2C1 clocks. */
     RCC_AHB1ENR |= (1u << 1);   /* GPIOBEN */
     RCC_APB1ENR |= (1u << 21);  /* I2C1EN  */
@@ -68,16 +80,17 @@ void i2c1_init(void)
     I2C1_CR1 = CR1_SWRST;
     I2C1_CR1 = 0;
 
-    /* 7. Timing for 100 kHz standard mode at 16 MHz APB1.
-     *    CR2.FREQ = 16  (APB1 in MHz)
-     *    CCR = fPCLK / (2 * fI2C) = 16,000,000 / 200,000 = 80
-     *    TRISE = (1000 ns * 16 MHz) + 1 = 17 */
-    I2C1_CR2   = 16;
-    I2C1_CCR   = 80;
-    I2C1_TRISE = 17;
+    /* 7. Standard-mode timing computed from PCLK1 (step 0):
+     *    16 MHz -> FREQ=16, CCR=80,  TRISE=17
+     *    42 MHz -> FREQ=42, CCR=210, TRISE=43 */
+    I2C1_CR2   = freq;
+    I2C1_CCR   = ccr;
+    I2C1_TRISE = trise;
 
     /* 8. Enable I2C1 (PE last). */
     I2C1_CR1 = CR1_PE;
+
+    return I2C_OK;
 }
 
 void i2c1_write(uint8_t addr7, const uint8_t *buf, uint16_t len)

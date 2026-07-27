@@ -26,14 +26,9 @@ void SysTick_Handler(void)
 
 void systick_init(uint32_t system_core_clock_hz)
 {
-    /*
-     * 1 ms tick: reload = clocks-per-ms - 1 (the counter counts reload..0
-     * inclusive). 24-bit reload field fits both planned clocks:
-     *   16 MHz HSI  -> 15,999
-     *   168 MHz PLL -> 167,999   (max 0x00FFFFFF = 16,777,215)
-     */
+    /* 1 ms tick; reload math in systick_reload_1ms() (host-tested). */
     SYST_CSR = 0;                                  /* stop during reconfig  */
-    SYST_RVR = (system_core_clock_hz / 1000u) - 1u;
+    SYST_RVR = systick_reload_1ms(system_core_clock_hz);
     SYST_CVR = 0;                                  /* write clears counter  */
     SYST_CSR = CSR_CLKSOURCE | CSR_TICKINT | CSR_ENABLE;
 }

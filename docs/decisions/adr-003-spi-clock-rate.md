@@ -75,6 +75,13 @@ Clock rate can be increased in a later session once the SPI driver is proven cor
 - After PLL configuration to 42MHz APB1: same BR setting yields 5.25MHz — still acceptable, revisit if higher throughput is needed
 - This setting is appropriate for development board use; PCB implementation may warrant revisiting
 
+**Update (clock-layer migration):** the 2 MHz figure is now enforced as a *cap* rather
+than a fixed divider — `spi2_init(pclk1_hz, max_sck_hz)` picks the fastest divider with
+SCK ≤ 2 MHz from the actual APB1 clock ([clock layer](../firmware/clock.md)). At 42 MHz
+PCLK1 this yields ÷32 = **1.3125 MHz** (not the 5.25 MHz anticipated above, which would
+have exceeded this ADR's 2 MHz breadboard decision). Raise the cap in `dac.c` when
+higher throughput is justified.
+
 ---
 
 ## References

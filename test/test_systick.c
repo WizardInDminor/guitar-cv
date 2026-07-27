@@ -37,6 +37,14 @@ static void test_basic_intervals(void)
     CHECK(systick_interval_elapsed(100, 100, 0),    "zero interval");
 }
 
+static void test_reload(void)
+{
+    /* reload = clocks-per-ms - 1; must fit the 24-bit SYST_RVR field. */
+    CHECK(systick_reload_1ms(16000000u) == 15999u,     "reload @16 MHz HSI");
+    CHECK(systick_reload_1ms(168000000u) == 167999u,   "reload @168 MHz PLL");
+    CHECK(systick_reload_1ms(168000000u) <= 0xFFFFFFu, "168 MHz fits 24-bit");
+}
+
 static void test_rollover(void)
 {
     /* start near wrap, now wrapped past zero: 0xFFFFFFF6 + 20 = 0xA. */
@@ -58,6 +66,7 @@ static void test_rollover(void)
 int main(void)
 {
     test_basic_intervals();
+    test_reload();
     test_rollover();
 
     if (failures == 0) {

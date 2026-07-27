@@ -35,6 +35,7 @@ The guiding principle is clean separation of concerns across layers — hardware
 ~/dev/school/stm32/guitar-cv/
 ├── src/
 │   ├── main.c              # Entry point + bring-up demo
+│   ├── clock.c             # Clock layer: 168 MHz PLL, bus frequencies
 │   ├── spi2.c              # SPI2 peripheral driver (MCP4922)
 │   ├── mcp4922.c           # MCP4922 command word packing
 │   ├── dac.c               # DAC write abstraction
@@ -45,7 +46,8 @@ The guiding principle is clean separation of concerns across layers — hardware
 ├── include/                # Matching headers for each src/ module
 ├── test/
 │   ├── test_cv.c           # Host-side unit tests (cv.c + mcp4922.c)
-│   └── test_systick.c      # Host-side unit tests (interval/rollover logic)
+│   ├── test_systick.c      # Host-side unit tests (interval/rollover logic)
+│   └── test_clock.c        # Host-side unit tests (PLL/SPI/I2C timing math)
 ├── startup/
 │   └── startup_stm32f407.s # Reset handler, vector table
 ├── ld/
@@ -81,7 +83,7 @@ The guiding principle is clean separation of concerns across layers — hardware
 | CV output mapping (note→count) | ✅ Implemented + unit-tested (`src/cv.c`, `src/mcp4922.c`) |
 | I2C driver (SSD1306) | ✅ Code written (`src/i2c1.c`, `src/ssd1306.c`) + hardware-verified 2026-06-12 (Saleae Logic 2, white screen confirmed) |
 | Timer / SysTick | ✅ Implemented (`src/systick.c`): 1 ms tick, `millis()`, rollover-safe `time_elapsed()`, host-tested — see [Timing](timing.md) |
-| Clock / PLL (168 MHz) | Not started (SysTick already parameterized for it) |
+| Clock / PLL (168 MHz) | ✅ Coded (`src/clock.c`): safe HSI→PLL sequence, frequency reporting, HSI fallback — bench verification pending; see [Clock](clock.md) |
 | ADC | Not started |
 | Pitch detection | Not started |
 | Envelope detection | Not started |

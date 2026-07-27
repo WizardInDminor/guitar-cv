@@ -69,11 +69,12 @@ flowchart TB
 
 ## 2. Current implementation status
 
-Stage: **mid Phase 1.** Both output-side hardware drivers are written and bench-verified,
-and the SysTick millisecond timebase is implemented. The remaining Phase 1 items are the
-clock/PLL step up to 168 MHz and encoder/button inputs. On the hardware side, the analog
-front end now has an approved design (Rev A.1, [ADR-005](decisions/adr-005-analog-front-end.md))
-ready to build.
+Stage: **late Phase 1.** Both output-side hardware drivers are written and bench-verified,
+the SysTick millisecond timebase is implemented, and the central clock layer with the
+168 MHz PLL transition is coded (bench verification pending). The remaining Phase 1
+item is encoder/button inputs. On the hardware side, the analog front end has an
+approved design (Rev A.1, [ADR-005](decisions/adr-005-analog-front-end.md)) ready to
+build.
 
 | Area | Status |
 |---|---|
@@ -84,17 +85,19 @@ ready to build.
 | CV math (`note_to_dac()`) | ✅ Implemented + unit-tested (`src/cv.c`) |
 | I2C/SSD1306 | ✅ Coded (`src/i2c1.c`, `src/ssd1306.c`) + **hardware-verified** 2026-06-12 (Saleae Logic 2, white screen) |
 | SysTick timebase (`src/systick.c`) | ✅ Implemented: 1 ms tick, `millis()`, rollover-safe `time_elapsed()`; host-tested |
-| Clock/PLL (168 MHz), ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
+| Clock layer / 168 MHz PLL (`src/clock.c`) | ✅ Coded: safe HSI→PLL transition, bus-frequency reporting, HSI fallback + fault blink; SPI/I2C/SysTick timing now derived — **bench verification pending** (see [Clock](firmware/clock.md)) |
+| ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
 | Encoder / button inputs | ❌ Not started |
 | Analog front-end (HW) | 📐 Rev A.1 design approved ([ADR-005](decisions/adr-005-analog-front-end.md)); build not started |
 | Eurorack power (HW) | ❌ Not started (constraint fixed: AFE runs on 3.3 V — see [Power](hardware/power.md)) |
 | Tests / CI | ✅ Host-side unit tests (`cv.c`, `mcp4922.c`, SysTick elapsed logic) run in GitHub Actions on every push/PR |
 
-**Next move: clock/PLL to 168 MHz with a central clock-description layer** — do it before
-ADC/timer configuration so peripheral timing constants (I2C CCR/TRISE, SPI baud, the
-24 kHz ADC trigger) are derived from actual bus clocks instead of hardcoded 16 MHz
-assumptions. Note the STM32F4 timer-clock rule: timers run at 2× their APB clock when
-the APB prescaler ≠ 1.
+**Next move: bench-verify the 168 MHz transition** (checklist in
+[Clock](firmware/clock.md)), then encoder/button inputs to close Phase 1. In parallel,
+Track B can begin: the hardware-independent Phase 2 modules (midpoint calibration,
+sample centering, block metrics, envelope/gate hysteresis, synthetic-signal harness)
+and the Stage-1 ADC design doc (pin/instance, trigger timer from `tim_apb1_hz` = 84 MHz,
+DMA stream, buffer ownership, interrupt priorities).
 
 ---
 
