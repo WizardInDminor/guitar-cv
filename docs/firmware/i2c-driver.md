@@ -28,10 +28,10 @@ Open-drain is mandatory for I2C — it allows the wired-AND bus topology where a
 |---|---|---|
 | Mode | Master | MCU drives the bus |
 | Speed | Standard (100 kHz) | Conservative for breadboard bring-up |
-| APB1 clock | 16 MHz | Default HSI, no PLL |
-| CR2.FREQ | 16 | APB1 frequency in MHz (required by peripheral) |
-| CCR | 80 | fAPB1 / (2 × fI2C) = 16M / 200k |
-| TRISE | 17 | (1000 ns × 16 MHz) + 1 |
+| APB1 clock | From the [clock layer](clock.md) | 42 MHz post-PLL; 16 MHz on HSI fallback |
+| CR2.FREQ | PCLK1 / 1 MHz | 42 @ 42 MHz (was 16 @ 16 MHz) |
+| CCR | ceil(PCLK1 / (2 × fSCL)) | 210 @ 42 MHz (was 80 @ 16 MHz); ceil keeps SCL ≤ target |
+| TRISE | FREQ + 1 | 43 @ 42 MHz (was 17 @ 16 MHz); 1000 ns SM rise time |
 | Pull-ups | Internal | Bring-up only — replace with 4.7 kΩ external resistors on the final board |
 
 ---
@@ -39,8 +39,12 @@ Open-drain is mandatory for I2C — it allows the wired-AND bus topology where a
 ## Initialization Sequence
 
 ```c
-void i2c1_init(void)
+i2c_status_t i2c1_init(uint32_t pclk1_hz, uint32_t scl_hz)
 {
+    // 0. Compute FREQ/CCR/TRISE from the actual APB1 clock (pure helpers in
+    //    i2c1.h, host-tested); validate field limits or return
+    //    I2C_ERR_INVALID_CONFIG before touching hardware
+
     // 1. Enable GPIOB and I2C1 clocks
     RCC_AHB1ENR |= (1u << 1);   // GPIOBEN
     RCC_APB1ENR |= (1u << 21);  // I2C1EN
@@ -57,13 +61,14 @@ void i2c1_init(void)
     I2C1_CR1 = SWRST
     I2C1_CR1 = 0
 
-    // 4. Timing
-    I2C1_CR2   = 16   // FREQ field: APB1 in MHz
-    I2C1_CCR   = 80
-    I2C1_TRISE = 17
+    // 4. Timing (computed in step 0; 42 MHz -> FREQ=42, CCR=210, TRISE=43)
+    I2C1_CR2   = freq
+    I2C1_CCR   = ccr
+    I2C1_TRISE = trise
 
     // 5. Enable (set PE last)
     I2C1_CR1 = PE
+    return I2C_OK
 }
 ```
 

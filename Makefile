@@ -37,12 +37,15 @@ flash:
 	        -c "program guitar-cv.elf verify reset exit"
 
 # Host-side unit tests for the pure logic (note_to_dac, mcp4922_command,
-# systick interval math). Built with the host compiler, not the ARM toolchain.
+# systick interval math, clock/SPI/I2C timing math). Built with the host
+# compiler, not the ARM toolchain.
 test: | build
 	$(HOSTCC) -Wall -Wextra -Iinclude -o build/test_cv src/cv.c src/mcp4922.c test/test_cv.c
 	$(HOSTCC) -Wall -Wextra -Iinclude -o build/test_systick test/test_systick.c
+	$(HOSTCC) -Wall -Wextra -Iinclude -o build/test_clock test/test_clock.c
 	./build/test_cv
 	./build/test_systick
+	./build/test_clock
 
 clean:
 	rm -f build/*.o build/test_* $(TARGET).elf $(TARGET).bin $(TARGET).map

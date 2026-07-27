@@ -30,7 +30,7 @@ CS is managed manually as a GPIO output. MISO is unused — the MCP4922 is write
 | Clock polarity | CPOL=0 | Clock idles low (per MCP4922 datasheet Fig 5.1) |
 | Clock phase | CPHA=0 | Sample on first (rising) edge |
 | Bit order | MSB first | Required by MCP4922 |
-| Baud rate divisor | ÷8 | Conservative for breadboard bring-up (~2MHz on APB1) |
+| Baud rate divisor | Computed from PCLK1 | Fastest divider with SCK ≤ 2 MHz cap (ADR-003): ÷8 = 2 MHz @ 16 MHz APB1; ÷32 = 1.3125 MHz @ 42 MHz APB1 (post-PLL, see [clock layer](clock.md)) |
 | CS management | Software (SSM=1) | Manual GPIO control for clarity and reliability |
 
 ---

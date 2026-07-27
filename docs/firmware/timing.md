@@ -81,14 +81,18 @@ Unsigned modulo-2³² subtraction makes `now − start` correct across the wrap;
 with relational operators. This helper is host-tested in `test/test_systick.c`,
 including wrap-around cases.
 
-## After the PLL Transition
+## Clock Source
 
-`systick_init()` takes the core clock as a parameter precisely so the PLL change is a
-one-line update at the call site: once the planned clock module exists, `main()` will
-call `clock_init()` first and then `systick_init(clocks.sysclk_hz)` (SysTick's
-`CLKSOURCE=1` runs from HCLK; with AHB prescaler = 1, HCLK = SYSCLK — if a divided AHB
-is ever used, pass `hclk_hz` instead) with the *reported* frequency from the clock
-layer instead of the `SYSTEM_CORE_CLOCK_HZ` constant. Re-running `systick_init()`
-stops the counter, reloads it for the new frequency, and restarts it; tick continuity
-across the switch is not guaranteed (one tick may stretch), which is acceptable during
-initialization.
+SysTick is initialized from the [clock layer](clock.md)'s reported HCLK:
+
+```c
+clock_init();                        /* HSI -> 168 MHz PLL (or HSI fallback) */
+const clock_frequencies_t *clocks = clock_get_frequencies();
+systick_init(clocks->hclk_hz);       /* reload 167,999 @ 168 MHz; 15,999 @ 16 MHz */
+```
+
+`CLKSOURCE=1` runs SysTick from HCLK, and the clock layer reports HCLK explicitly, so
+the reload is correct in every state — full-speed PLL or HSI fallback after a clock
+fault. Re-running `systick_init()` after any future clock change stops the counter,
+reloads it for the new frequency, and restarts it; tick continuity across the switch is
+not guaranteed (one tick may stretch), which is acceptable during initialization.

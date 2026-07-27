@@ -27,8 +27,15 @@
 #define SPI_SR_TXE  (1u << 1)  /* transmit buffer empty */
 #define SPI_SR_BSY  (1u << 7)  /* bus busy              */
 
-void spi2_init(void)
+spi_status_t spi2_init(uint32_t pclk1_hz, uint32_t max_sck_hz)
 {
+    /* 0. Baud divider from the actual APB1 clock: fastest SCK <= max. */
+    uint32_t br = spi_br_for_max_hz(pclk1_hz, max_sck_hz);
+
+    if (pclk1_hz == 0u || br > 7u) {
+        return SPI_ERR_INVALID_CONFIG;
+    }
+
     /* 1. Enable GPIOB and SPI2 clocks. */
     RCC_AHB1ENR |= (1u << 1);
     RCC_APB1ENR |= (1u << 14);
@@ -62,15 +69,18 @@ void spi2_init(void)
     /* 5. Idle CS high before enabling SPI. */
     GPIOB_ODR |= (1u << CS_PIN);
 
-    /* 6. CR1: DFF=1, SSM=1, SSI=1, BR=/8, MSTR=1; CPOL=0, CPHA=0, MSB first. */
+    /* 6. CR1: DFF=1, SSM=1, SSI=1, computed BR, MSTR=1; CPOL=0, CPHA=0,
+     *    MSB first. (16 MHz PCLK1 -> BR=/8 = 2 MHz; 42 MHz -> /32 = 1.3125 MHz.) */
     SPI2_CR1 = (1u << 11) |  /* DFF  16-bit frame        */
                (1u << 9)  |  /* SSM  software CS          */
                (1u << 8)  |  /* SSI  internal NSS high    */
-               (2u << 3)  |  /* BR   fPCLK/8 (~2 MHz)     */
+               (br << 3)  |  /* BR   fastest <= max_sck   */
                (1u << 2);    /* MSTR master               */
 
     /* 7. Enable SPI2 (SPE last). */
     SPI2_CR1 |= (1u << 6);
+
+    return SPI_OK;
 }
 
 void spi2_write16(uint16_t data)
