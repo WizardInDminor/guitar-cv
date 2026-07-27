@@ -36,13 +36,15 @@ flash:
 	        -f target/stm32f4x.cfg \
 	        -c "program guitar-cv.elf verify reset exit"
 
-# Host-side unit tests for the pure conversion logic (note_to_dac,
-# mcp4922_command). Built with the host compiler, not the ARM toolchain.
+# Host-side unit tests for the pure logic (note_to_dac, mcp4922_command,
+# systick interval math). Built with the host compiler, not the ARM toolchain.
 test: | build
 	$(HOSTCC) -Wall -Wextra -Iinclude -o build/test_cv src/cv.c src/mcp4922.c test/test_cv.c
+	$(HOSTCC) -Wall -Wextra -Iinclude -o build/test_systick test/test_systick.c
 	./build/test_cv
+	./build/test_systick
 
 clean:
-	rm -f build/*.o build/test_cv $(TARGET).elf $(TARGET).bin $(TARGET).map
+	rm -f build/*.o build/test_* $(TARGET).elf $(TARGET).bin $(TARGET).map
 
 .PHONY: all flash test clean

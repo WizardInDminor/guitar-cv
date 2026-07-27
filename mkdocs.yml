@@ -47,6 +47,7 @@ nav:
     - SPI Driver: firmware/spi-driver.md
     - DAC Output: firmware/dac-output.md
     - I2C Driver: firmware/i2c-driver.md
+    - Timing (SysTick): firmware/timing.md
   - Concepts:
     - STM32 Alternate Functions: concepts/stm32-alternate-functions.md
     - SPI Peripheral Deep Dive: concepts/spi-peripheral.md
@@ -56,6 +57,7 @@ nav:
     - ADR-001 SPI Peripheral Selection: decisions/adr-001-spi-peripheral.md
     - ADR-002 CS Management: decisions/adr-002-cs-management.md
     - ADR-003 SPI Clock Rate: decisions/adr-003-spi-clock-rate.md
+    - ADR-005 Analog Front End (TLV9062): decisions/adr-005-analog-front-end.md
   - Sessions:
     - Session 02 — SPI Bring-Up: sessions/session-02.md
     - Session 03 — I2C Bring-Up: sessions/session-03.md

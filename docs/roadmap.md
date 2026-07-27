@@ -17,8 +17,8 @@ the engineering ethos is explicit: **register-level bare-metal C, no HAL/CubeMX*
 
 ```mermaid
 flowchart LR
-    G[Guitar] --> AFE["Analog Front-End<br/>TL072/74 gain+bias+protect<br/>TLE2426 virtual gnd"]
-    AFE --> ADC["STM32 ADC<br/>continuous sampling"]
+    G[Guitar] --> AFE["Analog Front-End Rev A.1<br/>TLV9062, 3.3V single-supply<br/>VBIAS 1.65V, gain ≈4.9×"]
+    AFE --> ADC["STM32 ADC<br/>24 kHz target"]
     ADC --> PD["YIN pitch detect<br/>+ envelope / onset"]
     PD --> QZ["Quantize (optional)"]
     QZ --> CV["1V/oct mapping<br/>note_to_dac()"]
@@ -39,9 +39,15 @@ flowchart LR
   ÷8 (~2 MHz) bring-up. See [ADR-001](decisions/adr-001-spi-peripheral.md),
   [ADR-002](decisions/adr-002-cs-management.md), [ADR-003](decisions/adr-003-spi-clock-rate.md).
 - **CV:** 1V/oct, C4 = 0 V, ≈103.6 DAC counts/semitone @ 3.3 Vref. See [CV Math](concepts/cv-math.md).
-- **Display:** SSD1306 128×64 over I2C. **Analog:** TL072/74 + TLE2426 ±12 V rail splitter.
+- **Display:** SSD1306 128×64 over I2C.
+- **Analog (Rev A.1):** 3.3 V single-supply **TLV9062** front end — buffered 1.65 V VBIAS,
+  ≈4.9× non-inverting gain, 1 MΩ input impedance, 3.3 kΩ/10 nF ADC filter, 24 kHz target.
+  Silence ≈ midscale but **calibrated in firmware**. Supersedes TL072/74 + TLE2426 —
+  see [ADR-005](decisions/adr-005-analog-front-end.md) and
+  [AFE Rev A.1](hardware/analog-front-end.md).
 
-**MVP (FR-01…FR-11):** guitar input, monophonic pitch (stretch: low-B 30.87 Hz), onset/gate,
+**MVP (FR-01…FR-11):** guitar input, monophonic pitch (core range: standard guitar down
+to low E2 ≈ 82.4 Hz; five-string-bass low B0 ≈ 30.87 Hz is a stretch goal), onset/gate,
 1V/oct CV out, gate out, quantized + unquantized sequence record/store, tap/definable
 tempo, encoder+button UI, OLED feedback. **Out of scope:** polyphony, DAW-style editing,
 fancy GUI, enclosure, manufacturing. **Stretch:** MIDI out, looper, chaining, ext-clock
@@ -63,9 +69,11 @@ flowchart TB
 
 ## 2. Current implementation status
 
-Stage: **mid Phase 1.** Both output-side hardware drivers are written and bench-verified.
-Platform bring-up is on track; the remaining Phase 1 items are SysTick, encoder/button
-inputs, and the clock/PLL step up to 168 MHz.
+Stage: **mid Phase 1.** Both output-side hardware drivers are written and bench-verified,
+and the SysTick millisecond timebase is implemented. The remaining Phase 1 items are the
+clock/PLL step up to 168 MHz and encoder/button inputs. On the hardware side, the analog
+front end now has an approved design (Rev A.1, [ADR-005](decisions/adr-005-analog-front-end.md))
+ready to build.
 
 | Area | Status |
 |---|---|
@@ -75,13 +83,18 @@ inputs, and the clock/PLL step up to 168 MHz.
 | SPI2 / MCP4922 driver | ✅ Coded (`src/spi2.c`, `src/dac.c`) + **hardware-verified** 2026-06-05 via Saleae Logic 2 MSO (0/1/2 V) |
 | CV math (`note_to_dac()`) | ✅ Implemented + unit-tested (`src/cv.c`) |
 | I2C/SSD1306 | ✅ Coded (`src/i2c1.c`, `src/ssd1306.c`) + **hardware-verified** 2026-06-12 (Saleae Logic 2, white screen) |
-| Timers/SysTick, ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
+| SysTick timebase (`src/systick.c`) | ✅ Implemented: 1 ms tick, `millis()`, rollover-safe `time_elapsed()`; host-tested |
+| Clock/PLL (168 MHz), ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
 | Encoder / button inputs | ❌ Not started |
-| Analog front-end (HW), Eurorack power (HW) | ❌ Not started |
-| Tests / CI | ⚠️ Host-side unit tests for `cv.c` + `mcp4922.c` only; no CI |
+| Analog front-end (HW) | 📐 Rev A.1 design approved ([ADR-005](decisions/adr-005-analog-front-end.md)); build not started |
+| Eurorack power (HW) | ❌ Not started (constraint fixed: AFE runs on 3.3 V — see [Power](hardware/power.md)) |
+| Tests / CI | ✅ Host-side unit tests (`cv.c`, `mcp4922.c`, SysTick elapsed logic) run in GitHub Actions on every push/PR |
 
-**Next move: SysTick** — a reliable millisecond timebase is needed before encoder debouncing,
-display refresh scheduling, and tempo logic can be built.
+**Next move: clock/PLL to 168 MHz with a central clock-description layer** — do it before
+ADC/timer configuration so peripheral timing constants (I2C CCR/TRISE, SPI baud, the
+24 kHz ADC trigger) are derived from actual bus clocks instead of hardcoded 16 MHz
+assumptions. Note the STM32F4 timer-clock rule: timers run at 2× their APB clock when
+the APB prescaler ≠ 1.
 
 ---
 
@@ -94,7 +107,7 @@ flowchart TB
         P1b["HW: MCP4922+OLED on breadboard; scope-verify SPI; DAC 1241≈1.000V"]
     end
     subgraph P2["Phase 2 — Audio & pitch (HIGHEST RISK)"]
-        P2a["HW: TL072/74 front-end, DC bias, anti-alias, TLE2426 vgnd"]
+        P2a["HW: TLV9062 Rev A.1 front-end (3.3V, VBIAS, ≈4.9× gain)"]
         P2b["SW: ADC timer-trigger + DMA ring buf; YIN; envelope/onset"]
     end
     subgraph P3["Phase 3 — Musical control path"]
@@ -113,10 +126,13 @@ flowchart TB
 - **Phase 1 — Core bring-up.** SPI2 driver + `spi2_write16()`, clock/PLL, SysTick, I2C+SSD1306,
   inputs. Breadboard MCP4922+OLED, scope-verify SPI, DAC sanity (count 1241 ≈ 1.000 V).
   *Exit: deterministic CV on the DAC, text on OLED.*
-- **Phase 2 — Audio & detection (riskiest).** Op-amp front-end (gain, mid-rail bias,
-  protection, anti-alias) + TLE2426 vgnd; ADC via timer trigger + DMA ring buffer; YIN;
-  envelope/onset. *Key tension: latency vs. accuracy at low B (30.87 Hz needs a long
-  window). Exit: stable live note/Hz readout at playable latency.*
+- **Phase 2 — Audio & detection (riskiest).** Build the Rev A.1 TLV9062 front end
+  (3.3 V single-supply, buffered VBIAS, ≈4.9× gain — [ADR-005](decisions/adr-005-analog-front-end.md));
+  ADC at 24 kHz via timer trigger + DMA ring buffer; firmware silence/midpoint
+  calibration; YIN; digital envelope/onset. *Key tension: latency vs. accuracy at the
+  low end — low E2 (82.4 Hz, ~12 ms period) is the core requirement; low B0
+  (30.87 Hz, ~32 ms period) is stretch and would roughly triple the analysis window.
+  Exit: stable live note/Hz readout at playable latency.*
 - **Phase 3 — Control path.** CV mapping + calibration, gate from onset/offset, quantization,
   sequence storage (quantized + unquantized), tempo/tap. *Exit: guitar → correct CV/gate
   driving a real oscillator/envelope.*
@@ -126,9 +142,15 @@ flowchart TB
 
 **Cross-cutting recommendations**
 
-1. **Host-side unit tests** for pure DSP/math (YIN, `note_to_dac`, quantization) — testable
-   off-target, de-risks Phase 2/3 cheaply.
-2. **Minimal CI** that compiles the firmware on push — there is currently none.
+1. **Host-side unit tests** for pure DSP/math (YIN, `note_to_dac`, quantization, timing
+   helpers) — testable off-target, de-risks Phase 2/3 cheaply. In place for the DAC path
+   and SysTick elapsed logic; extend to each new pure module.
+2. **CI**: host unit tests run in GitHub Actions on every push/PR. Still missing: an ARM
+   cross-compile job so firmware link breakage is caught in CI too.
 3. **Plan the F407→F405 pin migration early** so analog/PCB work isn't redone.
-4. **Keep ADR discipline** for open decisions: ADC sampling strategy, pitch-window length,
-   power topology.
+4. **Keep ADR discipline** for open decisions: ADC pin/instance/DMA mapping, pitch-window
+   length, power topology (analog 3.3 V separation).
+5. **Two-track development is now viable:** Track A finishes platform bring-up (PLL,
+   timeouts, OLED text, encoder); Track B starts hardware-independent Phase 2 firmware
+   (midpoint calibration, sample centering, block metrics, envelope/gate hysteresis,
+   synthetic-signal test harness) against the fixed Rev A.1 analog contract.

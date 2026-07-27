@@ -4,21 +4,21 @@
 
 .section .isr_vector, "a"
 .word _estack
-.word Reset_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
-.word Default_Handler
+.word Reset_Handler       @ 1  Reset
+.word Default_Handler     @ 2  NMI
+.word Default_Handler     @ 3  HardFault
+.word Default_Handler     @ 4  MemManage
+.word Default_Handler     @ 5  BusFault
+.word Default_Handler     @ 6  UsageFault
+.word Default_Handler     @ 7  reserved
+.word Default_Handler     @ 8  reserved
+.word Default_Handler     @ 9  reserved
+.word Default_Handler     @ 10 reserved
+.word Default_Handler     @ 11 SVCall
+.word Default_Handler     @ 12 Debug Monitor
+.word Default_Handler     @ 13 reserved
+.word Default_Handler     @ 14 PendSV
+.word SysTick_Handler     @ 15 SysTick (src/systick.c)
 
 .section .text
 

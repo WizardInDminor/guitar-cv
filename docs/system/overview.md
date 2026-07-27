@@ -24,9 +24,9 @@
 ## Subsystem Descriptions
 
 ### Analog Front End
-Conditions the instrument-level guitar signal for ADC input. Handles gain staging, DC biasing, and signal protection. Designed around TL072/TL074 op-amps with TLE2426 virtual ground reference.
+Conditions the instrument-level guitar signal for ADC input. Rev A.1 is a **3.3 V single-supply** design around a **TLV9062** dual rail-to-rail op-amp: one channel buffers a mid-supply VBIAS (≈ 1.65 V from a 10 kΩ/10 kΩ divider), the other provides a ≈ 4.9× non-inverting gain stage referenced to VBIAS. The input path (2.2 kΩ protection, 220 pF RF filter, 100 nF AC coupling, 1 MΩ bias/input-impedance resistor) feeds a 3.3 kΩ/10 nF ADC filter, targeting 24 kHz sampling. Silence sits near ADC midscale but is **measured in firmware**, not assumed. The waveform is preserved — all detection is digital.
 
-See: [Analog Front End](../hardware/analog-front-end.md)
+See: [Analog Front End — Rev A.1](../hardware/analog-front-end.md), [ADR-005](../decisions/adr-005-analog-front-end.md)
 
 ### STM32F407 Control Core
 The central processing element. Runs bare-metal C firmware responsible for:
@@ -60,8 +60,8 @@ Physical encoder and buttons for mode selection, parameter adjustment, and perfo
 
 ```
 Guitar signal
-  → Analog front end (gain, bias, protection)
-  → STM32 ADC (continuous sampling)
+  → Analog front end (protect → AC-couple → bias to VBIAS → gain ≈4.9× → filter)
+  → STM32 ADC (24 kHz target; samples centered on measured midpoint)
   → Pitch detection (YIN algorithm)
   → Note quantization (if enabled)
   → CV mapping (note → DAC count via 1V/oct math)
@@ -69,9 +69,9 @@ Guitar signal
   → Analog CV output → Eurorack oscillator
 
 Guitar signal
-  → Analog front end
-  → Envelope detection
-  → Gate logic (onset/offset detection)
+  → Analog front end (same path — no analog detection hardware)
+  → Envelope detection (firmware, on centered samples)
+  → Gate logic (onset/offset detection with hysteresis)
   → Gate output → Eurorack envelope/trigger
 ```
 
