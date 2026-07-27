@@ -31,6 +31,13 @@ while (1) {
 and controlled bring-up sequencing (e.g. the SSD1306 power-on settle). Application
 logic must never block on it.
 
+**Missed-interval policy is per subsystem, not baked into the timing layer.** The `if`
+form above processes one elapsed event per loop pass — if the loop stalls for several
+intervals, extra events are dropped and cadence resumes cleanly (right for UI refresh,
+heartbeats). Subsystems that must not lose ticks (e.g. sequencer tempo) can use
+`while (time_elapsed(last, interval)) { last += interval; process_one_tick(); }` to
+catch up, accepting a burst of work after a stall. Choose deliberately per subsystem.
+
 ## Registers
 
 SysTick is a Cortex-M core peripheral (ARMv7-M ARM), not an STM32 peripheral — the
