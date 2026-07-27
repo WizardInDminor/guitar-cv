@@ -13,17 +13,18 @@ in C, no HAL — every peripheral configured and reasoned about explicitly.
 
 - **[MCP4922 Wiring (datasheet-verified)](hardware/wiring-mcp4922.md)** — DAC ↔ STM32 connections.
 - **[SSD1306 Wiring](hardware/wiring-ssd1306.md)** — OLED ↔ STM32 I2C connections.
-- [Analog Front End](hardware/analog-front-end.md) · [Power Design](hardware/power.md) · [Bill of Materials](hardware/bom.md)
+- **[Analog Front End — Rev A.1](hardware/analog-front-end.md)** — 3.3 V TLV9062 design ([ADR-005](decisions/adr-005-analog-front-end.md)).
+- [Power Design](hardware/power.md) · [Bill of Materials](hardware/bom.md)
 
 ## Firmware
 
-- [Architecture](firmware/architecture.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md) · [I2C Driver](firmware/i2c-driver.md)
+- [Architecture](firmware/architecture.md) · [SPI Driver](firmware/spi-driver.md) · [DAC Output](firmware/dac-output.md) · [I2C Driver](firmware/i2c-driver.md) · [Timing (SysTick)](firmware/timing.md)
 - Concepts: [STM32 Alternate Functions](concepts/stm32-alternate-functions.md) · [SPI Peripheral Deep Dive](concepts/spi-peripheral.md) · [CV Math — 1V/oct](concepts/cv-math.md)
 
 ## Reference & decisions
 
 - [Register Map](reference/register-map.md) · [MCP4922 Command Word](reference/mcp4922-command-word.md)
-- ADRs: [001 SPI Peripheral](decisions/adr-001-spi-peripheral.md) · [002 CS Management](decisions/adr-002-cs-management.md) · [003 SPI Clock Rate](decisions/adr-003-spi-clock-rate.md)
+- ADRs: [001 SPI Peripheral](decisions/adr-001-spi-peripheral.md) · [002 CS Management](decisions/adr-002-cs-management.md) · [003 SPI Clock Rate](decisions/adr-003-spi-clock-rate.md) · [005 Analog Front End](decisions/adr-005-analog-front-end.md)
 
 ## Build the docs
 

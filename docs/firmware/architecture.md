@@ -40,10 +40,12 @@ The guiding principle is clean separation of concerns across layers — hardware
 │   ├── dac.c               # DAC write abstraction
 │   ├── cv.c                # note_to_dac() — 1V/oct conversion
 │   ├── i2c1.c              # I2C1 peripheral driver (SSD1306)
-│   └── ssd1306.c           # SSD1306 OLED device driver
+│   ├── ssd1306.c           # SSD1306 OLED device driver
+│   └── systick.c           # SysTick 1 ms timebase (millis, time_elapsed)
 ├── include/                # Matching headers for each src/ module
 ├── test/
-│   └── test_cv.c           # Host-side unit tests (cv.c + mcp4922.c)
+│   ├── test_cv.c           # Host-side unit tests (cv.c + mcp4922.c)
+│   └── test_systick.c      # Host-side unit tests (interval/rollover logic)
 ├── startup/
 │   └── startup_stm32f407.s # Reset handler, vector table
 ├── ld/
@@ -78,7 +80,8 @@ The guiding principle is clean separation of concerns across layers — hardware
 | SPI driver (MCP4922) | ✅ Code written (`src/spi2.c`, `src/dac.c`) + hardware-verified 2026-06-05 (Saleae Logic 2 MSO, 0/1/2 V) |
 | CV output mapping (note→count) | ✅ Implemented + unit-tested (`src/cv.c`, `src/mcp4922.c`) |
 | I2C driver (SSD1306) | ✅ Code written (`src/i2c1.c`, `src/ssd1306.c`) + hardware-verified 2026-06-12 (Saleae Logic 2, white screen confirmed) |
-| Timer / SysTick | Not started |
+| Timer / SysTick | ✅ Implemented (`src/systick.c`): 1 ms tick, `millis()`, rollover-safe `time_elapsed()`, host-tested — see [Timing](timing.md) |
+| Clock / PLL (168 MHz) | Not started (SysTick already parameterized for it) |
 | ADC | Not started |
 | Pitch detection | Not started |
 | Envelope detection | Not started |

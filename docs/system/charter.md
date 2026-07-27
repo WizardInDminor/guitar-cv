@@ -231,6 +231,9 @@ The prototype should aim for:
 * Real-time pitch detection suitable for musical use
 * Stable enough note tracking for monophonic guitar performance
 * Functional support for low notes, including low B target range if achievable within scope
+  (*scope clarification 2026-07-27: low E2 ≈ 82.41 Hz is the required MVP minimum; low B0
+  ≈ 30.87 Hz remains a stretch target — see [requirements](requirements.md) for the
+  normative statement*)
 * Gate behavior that feels musically coherent
 * CV output stable enough to drive external oscillators predictably
 * Latency low enough that the system feels like an instrument rather than an offline processor
