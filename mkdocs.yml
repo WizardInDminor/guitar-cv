@@ -47,6 +47,7 @@ nav:
     - SPI Driver: firmware/spi-driver.md
     - DAC Output: firmware/dac-output.md
     - I2C Driver: firmware/i2c-driver.md
+    - SSD1306 Driver: firmware/ssd1306-driver.md
     - Timing (SysTick): firmware/timing.md
   - Concepts:
     - STM32 Alternate Functions: concepts/stm32-alternate-functions.md

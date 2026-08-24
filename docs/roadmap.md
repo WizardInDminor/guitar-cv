@@ -83,6 +83,7 @@ ready to build.
 | SPI2 / MCP4922 driver | ✅ Coded (`src/spi2.c`, `src/dac.c`) + **hardware-verified** 2026-06-05 via Saleae Logic 2 MSO (0/1/2 V) |
 | CV math (`note_to_dac()`) | ✅ Implemented + unit-tested (`src/cv.c`) |
 | I2C/SSD1306 | ✅ Coded (`src/i2c1.c`, `src/ssd1306.c`) + **hardware-verified** 2026-06-12 (Saleae Logic 2, white screen) |
+| OLED 5×7 text rendering | ✅ Coded (`ssd1306_text()`, `include/font5x7.h`), ported from PR #4 onto the I2C1/page-mode driver; bench verification pending |
 | SysTick timebase (`src/systick.c`) | ✅ Implemented: 1 ms tick, `millis()`, rollover-safe `time_elapsed()`; host-tested |
 | Clock/PLL (168 MHz), ADC, YIN, envelope, gate, sequencer, UI | ❌ Not started |
 | Encoder / button inputs | ❌ Not started |
