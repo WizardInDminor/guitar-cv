@@ -80,6 +80,7 @@ The guiding principle is clean separation of concerns across layers — hardware
 | SPI driver (MCP4922) | ✅ Code written (`src/spi2.c`, `src/dac.c`) + hardware-verified 2026-06-05 (Saleae Logic 2 MSO, 0/1/2 V) |
 | CV output mapping (note→count) | ✅ Implemented + unit-tested (`src/cv.c`, `src/mcp4922.c`) |
 | I2C driver (SSD1306) | ✅ Code written (`src/i2c1.c`, `src/ssd1306.c`) + hardware-verified 2026-06-12 (Saleae Logic 2, white screen confirmed) |
+| OLED text (5×7 font) | ✅ Code written (`ssd1306_text()`, `include/font5x7.h`) — host render-harness verified; **bench verification pending** — see [SSD1306 Driver](ssd1306-driver.md) |
 | Timer / SysTick | ✅ Implemented (`src/systick.c`): 1 ms tick, `millis()`, rollover-safe `time_elapsed()`, host-tested — see [Timing](timing.md) |
 | Clock / PLL (168 MHz) | Not started (SysTick already parameterized for it) |
 | ADC | Not started |
